@@ -1,6 +1,8 @@
 Advanced RSS Widget
 ===================
 
+More advanced RSS widget, with more options and customization
+
 ## Installation
 
 This section describes how to install the plugin and get it working.
@@ -61,4 +63,4 @@ There are various ways you can contribute:
 
 ## Credits 
 
-This plugin was written by the development team at [IPC Media](http://www.timeincuk.com/) and maintained by [@spacedmonkey](https://github.com/spacedmonkey/).
+This plugin was written by the development team at [Time Inc. UK Ltd.](http://www.timeincuk.com/) and maintained by [@spacedmonkey](https://github.com/spacedmonkey/).
