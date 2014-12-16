@@ -1,0 +1,20 @@
+{
+    "name"       : "timeincuk/advanced-rss-widget",
+    "description": "More advanced RSS widget, with more options and customization ",
+    "homepage"   : "https://github.com/TimeIncUK/advanced-rss-widget",
+    "type"       : "wordpress-plugin",
+    "license"    : "GPL-2.0+",
+    "authors"    : [
+        {
+            "name"    : "Time Inc UK",
+            "homepage": "http://www.timeincuk.com/"
+        },
+        {
+            "name"    : "Jonathan Harris",
+            "homepage": "http://www.jonathandavidharris.co.uk/"
+        }
+    ],
+    "require": {
+        "composer/installers": "~1.0"
+    }
+}
