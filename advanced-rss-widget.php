@@ -234,7 +234,7 @@ class Advanced_RSS_Widget extends WP_Widget {
 	 */
 	public function form( $instance ) {
 
-		$instance = (array) $instance;
+		$instance = wp_parse_args( (array) $instance, $this->get_defaults() );
 
 		// Display the admin form
 		include( plugin_dir_path( __FILE__ ) . 'views/admin/admin.php' );
@@ -352,6 +352,9 @@ class Advanced_RSS_Widget extends WP_Widget {
 		$defaults = array(
 			'title'        => '',
 			'url'          => '',
+			'before_text'  => '',
+			'after_text'   => '',
+			'template'     => 'widget.php',
 			'cache_time'   => 3600,
 			'items'        => 10,
 			'show_summary' => 0,

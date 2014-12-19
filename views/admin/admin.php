@@ -33,7 +33,9 @@ foreach ( $inputs as $input ) {
 			break;
 	}
 
-	printf( $format, $this->get_field_id( $input['name'] ), $this->get_field_name( $input['name'] ), $input['title'], esc_attr( $instance[ $input['name'] ] ), $input['type'] );
+	$value = (isset($instance[ $input['name'] ])) ? $instance[ $input['name'] ] : '';
+
+	printf( $format, $this->get_field_id( $input['name'] ), $this->get_field_name( $input['name'] ), $input['title'], esc_attr( $value ), $input['type'] );
 
 }
 
@@ -45,6 +47,7 @@ if($counter == 1){
 	$value = key($templates);
 	printf( $format, $this->get_field_id( 'template' ), $this->get_field_name( 'template' ), $value);
 }else{
+	$options = '';
 	foreach($templates as $template => $name){
 		$options .= sprintf('<option value="%s" %s>%s</option>', $template, selected( $instance[ 'template' ], $template , false ), $name);
 	}
