@@ -109,7 +109,8 @@ class Advanced_RSS_Widget extends WP_Widget {
 			return print $cache[ $args['widget_id'] ];
 		}
 
-		$expires = 60;
+		// Cache for 5 minutes
+		$expires = 300;
 
 		$url = ! empty( $instance['url'] ) ? $instance['url'] : '';
 		while ( stristr( $url, 'http' ) != $url ) {
@@ -119,6 +120,15 @@ class Advanced_RSS_Widget extends WP_Widget {
 			return;
 		}
 
+		$current_date = date( "YmdGi" );
+
+		$widget_string = "<!-- generated $current_date -->";
+
+		$cache_bust = ( isset ( $instance['cache_bust'] ) ? $instance['cache_bust'] : false );
+
+		if ( $cache_bust ) {
+			$url = add_query_arg( 'cache_bust', $current_date, $url );
+		}
 		$url = apply_filters( 'advanced_rss_widget_url', $url, $this->id );
 
 		$rss = fetch_feed( $url );
@@ -167,7 +177,7 @@ class Advanced_RSS_Widget extends WP_Widget {
 
 		$args['before_widget'] = str_replace( 'class="', 'class="' . implode( ' ', $extra_classes ) . ' ', $args['before_widget'] );
 
-		$widget_string = $args['before_widget'];
+		$widget_string .= $args['before_widget'];
 		if ( $title ) {
 			$widget_string .= $args['before_title'] . $title_styled . $args['after_title'];
 		}
@@ -339,16 +349,18 @@ class Advanced_RSS_Widget extends WP_Widget {
 	}
 
 	public function get_defaults() {
-		$defaults = array( 'title'        => '',
-		                   'url'          => '',
-		                   'cache_time'   => 3600,
-		                   'items'        => 10,
-		                   'show_summary' => 0,
-		                   'show_author'  => 0,
-		                   'show_date'    => 0,
-		                   'show_image'   => 0,
-		                   'hide_mobile'  => 0,
-		                   'teaser_size'  => 0
+		$defaults = array(
+			'title'        => '',
+			'url'          => '',
+			'cache_time'   => 3600,
+			'items'        => 10,
+			'show_summary' => 0,
+			'show_author'  => 0,
+			'show_date'    => 0,
+			'show_image'   => 0,
+			'hide_mobile'  => 0,
+			'cache_bust'   => 0,
+			'teaser_size'  => 0
 		);
 
 		return $defaults;
