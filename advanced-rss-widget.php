@@ -150,9 +150,7 @@ class Advanced_RSS_Widget extends WP_Widget {
 		}
 
 		$processed = $this->progess_rss_input( $rss, $instance );
-
-		$desc  = esc_attr( strip_tags( @html_entity_decode( $rss->get_description(), ENT_QUOTES, get_option( 'blog_charset' ) ) ) );
-		$title = esc_html( strip_tags( $rss->get_title() ) );
+		$title = '';
 		$link  = esc_url( strip_tags( $rss->get_permalink() ) );
 		while ( stristr( $link, 'http' ) != $link ) {
 			$link = substr( $link, 1 );
@@ -160,11 +158,9 @@ class Advanced_RSS_Widget extends WP_Widget {
 
 		if ( ! empty( $instance['title'] ) ) {
 			$title = $instance['title'];
-		} else if ( ! empty( $desc ) ) {
-			$title = $desc;
 		}
 
-		$title        = apply_filters( 'widget_title', $title, $instance, $this->id_base );
+		$title        = apply_filters( 'widget_title', $title, $instance, $rss, $this->id_base );
 		$format       = '<a href="%s" class="%s">%s</a>';
 		$format       = apply_filters( 'widget_title_format', $format, $link, $this->get_widget_slug(), $title, $instance, $this->id_base );
 		$title_styled = sprintf( $format, $link, $this->get_widget_slug(), $title, $instance, $this->id_base );
@@ -178,7 +174,7 @@ class Advanced_RSS_Widget extends WP_Widget {
 		$args['before_widget'] = str_replace( 'class="', 'class="' . implode( ' ', $extra_classes ) . ' ', $args['before_widget'] );
 
 		$widget_string .= $args['before_widget'];
-		if ( $title ) {
+		if ( ! empty( $title ) ) {
 			$widget_string .= $args['before_title'] . $title_styled . $args['after_title'];
 		}
 
