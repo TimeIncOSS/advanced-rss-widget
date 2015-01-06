@@ -59,10 +59,10 @@ class Advanced_RSS_Widget extends WP_Widget {
 
 		parent::__construct(
 			$this->get_widget_slug(),
-			__( 'Advanced RSS Widget', $this->get_widget_slug() ),
+			__( 'Advanced RSS Widget', 'advanced-rss-widget' ),
 			array(
 				'classname'   => $this->get_widget_slug() . '-class',
-				'description' => __( 'More advanced RSS widget, with more options and customization ', $this->get_widget_slug() )
+				'description' => __( 'More advanced RSS widget, with more options and customization ', 'advanced-rss-widget' )
 			)
 		);
 
@@ -135,14 +135,14 @@ class Advanced_RSS_Widget extends WP_Widget {
 
 		if ( is_wp_error( $rss ) ) {
 			if ( is_admin() || current_user_can( 'manage_options' ) ) {
-				echo '<p>' . sprintf( __( '<strong>RSS Error</strong>: %s' ), $rss->get_error_message() ) . '</p>';
+				echo '<p>' . sprintf( __( '<strong>RSS Error</strong>: %s', 'advanced-rss-widget' ), $rss->get_error_message() ) . '</p>';
 			}
 
 			return;
 		}
 
 		if ( ! $rss->get_item_quantity() ) {
-			echo '<p>' . __( 'An error has occurred, which probably means the feed is down. Try again later.' ) . '</p>';
+			echo '<p>' . __( 'An error has occurred, which probably means the feed is down. Try again later.', 'advanced-rss-widget' ) . '</p>';
 			$rss->__destruct();
 			unset( $rss );
 
@@ -257,10 +257,13 @@ class Advanced_RSS_Widget extends WP_Widget {
 			while ( stristr( $link, 'http' ) != $link ) {
 				$link = substr( $link, 1 );
 			}
-			$link  = esc_url( strip_tags( $link ) );
+
+			$link = esc_url( strip_tags( $link ) );
+			$link = apply_filters( 'advanced_rss_widget_link', $link, $item );
+
 			$title = esc_html( trim( strip_tags( $item->get_title() ) ) );
 			if ( empty( $title ) ) {
-				$title = __( 'Untitled' );
+				$title = __( 'Untitled', 'advanced-rss-widget' );
 			}
 			$desc = @html_entity_decode( $item->get_description(), ENT_QUOTES, get_option( 'blog_charset' ) );
 			$desc = wp_strip_all_tags( $desc );
@@ -371,4 +374,6 @@ class Advanced_RSS_Widget extends WP_Widget {
 
 } // end class
 
-add_action( 'widgets_init', create_function( '', 'register_widget("Advanced_RSS_Widget");' ) );
+add_action( 'widgets_init', function () {
+		register_widget( "Advanced_RSS_Widget" );
+	} );
