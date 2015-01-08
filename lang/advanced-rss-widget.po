@@ -1,0 +1,87 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Advanced RSS Widget\n"
+"POT-Creation-Date: 2015-01-08 11:25-0000\n"
+"PO-Revision-Date: 2015-01-08 11:25-0000\n"
+"Last-Translator: \n"
+"Language-Team: Time Inc. (UK) Ltd <jonathan.harris@timeinc.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.3\n"
+"X-Poedit-KeywordsList: _;gettext;gettext_noop;__;_e\n"
+"X-Poedit-Basepath: .\n"
+
+#: advanced-rss-widget.php:65
+msgid "Advanced RSS Widget"
+msgstr ""
+
+#: advanced-rss-widget.php:68
+msgid "More advanced RSS widget, with more options and customization "
+msgstr ""
+
+#: advanced-rss-widget.php:142
+msgid "RSS Error"
+msgstr ""
+
+#: advanced-rss-widget.php:149
+msgid ""
+"An error has occurred, which probably means the feed is down. Try again "
+"later."
+msgstr ""
+
+#: advanced-rss-widget.php:279
+msgid "Untitled"
+msgstr ""
+
+#: views/admin/admin.php:4
+msgid "Title"
+msgstr ""
+
+#: views/admin/admin.php:5
+msgid "URL"
+msgstr ""
+
+#: views/admin/admin.php:6
+msgid "Number of Items"
+msgstr ""
+
+#: views/admin/admin.php:7
+msgid "Display item content?"
+msgstr ""
+
+#: views/admin/admin.php:8
+msgid "Display item author if available?"
+msgstr ""
+
+#: views/admin/admin.php:9
+msgid "Display item date?"
+msgstr ""
+
+#: views/admin/admin.php:10
+msgid "Display item image if available?"
+msgstr ""
+
+#: views/admin/admin.php:11
+msgid "Hide on mobile"
+msgstr ""
+
+#: views/admin/admin.php:12
+msgid "Cache bust feed URL"
+msgstr ""
+
+#: views/admin/admin.php:13
+msgid "Teaser Size (if 0 display all)"
+msgstr ""
+
+#: views/admin/admin.php:15
+msgid "Intro Text"
+msgstr ""
+
+#: views/admin/admin.php:16
+msgid "Footer Text"
+msgstr ""
+
+#: views/admin/admin.php:56
+msgid "Templates"
+msgstr ""

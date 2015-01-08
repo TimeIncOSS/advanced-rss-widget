@@ -5,10 +5,10 @@
  * More advanced RSS widget, with more options and customization
  *
  * @package   Advanced_RSS_Widget
- * @author    Your Name <jonathan.harris@timeinc.com>
+ * @author    Jonathan Harris <jonathan.harris@timeinc.com>
  * @license   GPL-2.0+
  * @link      http://www.timeincuk.com/
- * @copyright 2015 Time Inc UK
+ * @copyright 2015 Time Inc. (UK) Ltd
  *
  * @wordpress-plugin
  * Plugin Name:       Advanced RSS Widget
@@ -56,6 +56,9 @@ class Advanced_RSS_Widget extends WP_Widget {
 	 * loads localization files, and includes necessary stylesheets and JavaScript.
 	 */
 	public function __construct() {
+
+		// load plugin text domain
+		add_action( 'init', array( $this, 'widget_textdomain' ) );
 
 		parent::__construct(
 			$this->get_widget_slug(),
@@ -110,32 +113,33 @@ class Advanced_RSS_Widget extends WP_Widget {
 		}
 
 		// Cache for 5 minutes
-		$expires = 300;
+		$expires = apply_filters( 'advanced_rss_widget_expiry_time', 300 );
 
 		$url = ! empty( $instance['url'] ) ? $instance['url'] : '';
 		while ( stristr( $url, 'http' ) != $url ) {
 			$url = substr( $url, 1 );
 		}
-		if ( empty( $url ) ) {
-			return;
-		}
-
-		$current_date = date( "YmdGi" );
-
-		$widget_string = "<!-- generated $current_date -->";
 
 		$cache_bust = ( isset ( $instance['cache_bust'] ) ? $instance['cache_bust'] : false );
+
+		$current_date = date( "YmdGi" );
 
 		if ( $cache_bust ) {
 			$url = add_query_arg( 'cache_bust', $current_date, $url );
 		}
 		$url = apply_filters( 'advanced_rss_widget_url', $url, $this->id );
 
+		if ( empty( $url ) ) {
+			return;
+		}
+
+		$widget_string = "<!-- generated $current_date -->";
+
 		$rss = fetch_feed( $url );
 
 		if ( is_wp_error( $rss ) ) {
 			if ( is_admin() || current_user_can( 'manage_options' ) ) {
-				echo '<p>' . sprintf( __( '<strong>RSS Error</strong>: %s', 'advanced-rss-widget' ), $rss->get_error_message() ) . '</p>';
+				echo '<p>' . sprintf( '<strong>%s</strong>: %s', __( 'RSS Error', 'advanced-rss-widget' ), $rss->get_error_message() ) . '</p>';
 			}
 
 			return;
@@ -149,22 +153,12 @@ class Advanced_RSS_Widget extends WP_Widget {
 			return;
 		}
 
-		$processed = $this->progess_rss_input( $rss, $instance );
-		$title = '';
-		$link  = esc_url( strip_tags( $rss->get_permalink() ) );
+		$processed = $this->process_rss_input( $rss, $instance );
+
+		$link = esc_url( strip_tags( $rss->get_permalink() ) );
 		while ( stristr( $link, 'http' ) != $link ) {
 			$link = substr( $link, 1 );
 		}
-
-		if ( ! empty( $instance['title'] ) ) {
-			$title = $instance['title'];
-		}
-
-		$title        = apply_filters( 'widget_title', $title, $instance, $rss, $this->id_base );
-		$format       = '<a href="%s" class="%s">%s</a>';
-		$format       = apply_filters( 'widget_title_format', $format, $link, $this->get_widget_slug(), $title, $instance, $this->id_base );
-		$title_styled = sprintf( $format, $link, $this->get_widget_slug(), $title, $instance, $this->id_base );
-
 
 		$hide_mobile = ( isset ( $instance['hide_mobile'] ) ? $instance['hide_mobile'] : false );
 
@@ -174,7 +168,20 @@ class Advanced_RSS_Widget extends WP_Widget {
 		$args['before_widget'] = str_replace( 'class="', 'class="' . implode( ' ', $extra_classes ) . ' ', $args['before_widget'] );
 
 		$widget_string .= $args['before_widget'];
+
+		$title = '';
+		if ( ! empty( $instance['title'] ) ) {
+			$title = $instance['title'];
+		}
+
+		$title = apply_filters( 'widget_title', $title, $instance, $rss, $this->id_base );
+
 		if ( ! empty( $title ) ) {
+
+			$format       = '<a href="%s" class="%s">%s</a>';
+			$format       = apply_filters( 'advanced_rss_widget_title_format', $format, $link, $this->get_widget_slug(), $title, $instance, $this->id_base );
+			$title_styled = sprintf( $format, $link, $this->get_widget_slug(), $title, $instance, $this->id_base );
+
 			$widget_string .= $args['before_title'] . $title_styled . $args['after_title'];
 		}
 
@@ -202,7 +209,9 @@ class Advanced_RSS_Widget extends WP_Widget {
 
 	} // end widget
 
-
+	/**
+	 * Flush cache for all widgets
+	 */
 	public function flush_widget_cache() {
 		wp_cache_delete( $this->get_widget_slug(), 'widget' );
 	}
@@ -237,7 +246,15 @@ class Advanced_RSS_Widget extends WP_Widget {
 
 	} // end form
 
-	private function progess_rss_input( $rss, $instance ) {
+	/**
+	 * Process rss data, format it to a usable array
+	 *
+	 * @param $rss
+	 * @param $instance
+	 *
+	 * @return array
+	 */
+	private function process_rss_input( $rss, $instance ) {
 		$processed = array();
 
 
@@ -337,9 +354,25 @@ class Advanced_RSS_Widget extends WP_Widget {
 	}
 
 	/*--------------------------------------------------*/
+	/* Public Functions
+	/*--------------------------------------------------*/
+	/**
+	 * Loads the Widget's text domain for localization and translation.
+	 */
+	public function widget_textdomain() {
+		load_plugin_textdomain( $this->get_widget_slug(), false, plugin_dir_path( __FILE__ ) . 'lang/' );
+	} // end widget_textdomain
+
+
+	/*--------------------------------------------------*/
 	/* Filtable Functions
 	/*--------------------------------------------------*/
 
+	/**
+	 * Get the path for the Widget templates
+	 *
+	 * @return string PATH to directory of with templates
+	 */
 	public function get_public_directory() {
 		$path = plugin_dir_path( __FILE__ ) . 'views/public/';
 		$path = apply_filters( 'advanced_rss_widget_public_path', $path );
@@ -347,6 +380,11 @@ class Advanced_RSS_Widget extends WP_Widget {
 		return $path;
 	}
 
+	/**
+	 * Get an array of widget's default values
+	 *
+	 * @return array defaults
+	 */
 	public function get_defaults() {
 		$defaults = array(
 			'title'        => '',
@@ -364,6 +402,7 @@ class Advanced_RSS_Widget extends WP_Widget {
 			'cache_bust'   => 0,
 			'teaser_size'  => 0
 		);
+		$defaults = apply_filters( 'advanced_rss_widget_defaults', $defaults );
 
 		return $defaults;
 	}
@@ -371,5 +410,5 @@ class Advanced_RSS_Widget extends WP_Widget {
 } // end class
 
 add_action( 'widgets_init', function () {
-		register_widget( "Advanced_RSS_Widget" );
-	} );
+	register_widget( "Advanced_RSS_Widget" );
+} );
