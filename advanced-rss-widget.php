@@ -305,6 +305,8 @@ class Advanced_RSS_Widget extends WP_Widget {
 				$author = $item->get_author();
 				if ( is_object( $author ) ) {
 					$author = $author->get_name();
+				}
+				if ( is_string( $author ) ){
 					$author = esc_html( strip_tags( $author ) );
 				}
 			}
