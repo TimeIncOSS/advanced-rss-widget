@@ -160,8 +160,6 @@ class Advanced_RSS_Widget extends WP_Widget {
 			$link = substr( $link, 1 );
 		}
 
-		$hide_mobile = ( isset ( $instance['hide_mobile'] ) ? $instance['hide_mobile'] : false );
-
 		$extra_classes = array();
 		$extra_classes = apply_filters( 'advanced_rss_widget_classes', $extra_classes, $instance, $this->id );
 
@@ -398,7 +396,6 @@ class Advanced_RSS_Widget extends WP_Widget {
 			'show_author'  => 0,
 			'show_date'    => 0,
 			'show_image'   => 0,
-			'hide_mobile'  => 0,
 			'cache_bust'   => 0,
 			'teaser_size'  => 0
 		);

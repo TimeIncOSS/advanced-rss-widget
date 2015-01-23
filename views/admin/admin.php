@@ -8,7 +8,6 @@ $inputs = array(
 	array( 'name' => 'show_author', 'title' => __('Display item author if available?'), 'type' => 'checkbox' ),
 	array( 'name' => 'show_date',   'title' => __('Display item date?'), 'type' => 'checkbox' ),
 	array( 'name' => 'show_image',  'title' => __('Display item image if available?'), 'type' => 'checkbox' ),
-	array( 'name' => 'hide_mobile', 'title' => __('Hide on mobile'), 'type' => 'checkbox' ),
 	array( 'name' => 'cache_bust',  'title' => __('Cache bust feed URL'), 'type' => 'checkbox' ),
 	array( 'name' => 'teaser_size', 'title' => __('Teaser Size (if 0 display all)'), 'type' => 'number' ),
 	//array( 'name' => 'cache_time',  'title' => __('Cache Time (In seconds)'), 'type' => 'number' ),

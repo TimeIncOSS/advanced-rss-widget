@@ -3,10 +3,6 @@
 Widget Template Name: Standand Template
 */
 
-if ( $hide_mobile  && wp_is_mobile() )
-	return;
-
-
 echo $instance['before_text'];
 ?>
 <ul>
