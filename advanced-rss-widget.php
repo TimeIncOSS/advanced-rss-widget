@@ -14,7 +14,7 @@
  * Plugin Name:       Advanced RSS Widget
  * Plugin URI:        http://www.timeincuk.com/
  * Description:       More advanced RSS widget, with more options and customization
- * Version:           1.0.0
+ * Version:           2.0.0
  * Author:            Jonathan Harris
  * Author URI:        http://www.jonathandavidharris.co.uk/
  * Text Domain:       advanced-rss-widget
@@ -29,6 +29,8 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+
 
 class Advanced_RSS_Widget extends WP_Widget {
 
@@ -47,9 +49,15 @@ class Advanced_RSS_Widget extends WP_Widget {
 	 */
 	protected $widget_slug = 'advanced-rss-widget';
 
-	/*--------------------------------------------------*/
-	/* Constructor
-	/*--------------------------------------------------*/
+	/**
+	 *
+	 * Version number.
+	 *
+	 * @since    2.0.0
+	 *
+	 * @var      string
+	 */
+	protected $version = '2.0.0';
 
 	/**
 	 * Specifies the classname and description, instantiates the widget,
@@ -57,8 +65,13 @@ class Advanced_RSS_Widget extends WP_Widget {
 	 */
 	public function __construct() {
 
+		add_action( 'admin_init', array( $this, 'maybe_upgrade' ) );
+
 		// load plugin text domain
 		add_action( 'init', array( $this, 'widget_textdomain' ) );
+
+		// Activate plugin when new blog is added
+		add_action( 'wpmu_new_blog', array( $this, 'activate_new_site' ) );
 
 		parent::__construct(
 			$this->get_widget_slug(),
@@ -69,6 +82,9 @@ class Advanced_RSS_Widget extends WP_Widget {
 			)
 		);
 
+		add_filter( 'cron_schedules', array( $this, 'cron_add_twicehourly' ) );
+		add_action( 'advanced_rss_widget_get_urls',  array( $this, 'event_rss_urls' ) );
+
 		// Refreshing the widget's cached output with each new post
 		add_action( 'save_post', array( $this, 'flush_widget_cache' ) );
 		add_action( 'deleted_post', array( $this, 'flush_widget_cache' ) );
@@ -76,6 +92,206 @@ class Advanced_RSS_Widget extends WP_Widget {
 
 	} // end constructor
 
+	public function single_activate(){
+		$op  = 'advanced_rss_widget_dbv';
+		$this->schedule_event_rss_urls();
+		update_option( $op, $this->version );
+	}
+
+	/**
+	 * Fired when the plugin is activated.
+	 *
+	 * @since    2.0.0
+	 *
+	 * @param    boolean    $network_wide    True if WPMU superadmin uses
+	 *                                       "Network Activate" action, false if
+	 *                                       WPMU is disabled or plugin is
+	 *                                       activated on an individual blog.
+	 */
+	public function activate( $network_wide  ) {
+
+		if ( $network_wide && function_exists( 'is_multisite' ) && is_multisite() ) {
+			// Get all blog ids of the current network
+			$sites = wp_get_sites();
+
+			foreach ( $sites as $id => $site ) {
+				switch_to_blog( $site['blog_id'] );
+				$this->single_activate();
+			}
+			restore_current_blog();
+		} else {
+			$this->single_activate();
+		}
+
+	}
+
+	public function single_deactivate(){
+		$this->unschedule_event_rss_urls();
+	}
+
+	/**
+	 * Fired when the plugin is deactivated.
+	 *
+	 * @since    2.0.0
+	 *
+	 * @param    boolean    $network_wide    True if WPMU superadmin uses
+	 *                                       "Network Deactivate" action, false if
+	 *                                       WPMU is disabled or plugin is
+	 *                                       deactivated on an individual blog.
+	 */
+	public function deactivate( $network_wide ) {
+
+		if ( $network_wide && function_exists( 'is_multisite' ) && is_multisite() ) {
+			// Get all blog ids of the current network
+			$sites = wp_get_sites();
+
+			foreach ( $sites as $id => $site ) {
+				switch_to_blog( $site['blog_id'] );
+				$this->single_deactivate();
+			}
+			restore_current_blog();
+		} else {
+			$this->single_deactivate();
+		}
+
+	}
+
+	public function maybe_upgrade() {
+		$op  = 'advanced_rss_widget_dbv';
+		$ver = get_option( $op, '1.0.0' );
+		if ( version_compare( $ver, '2.0.0', '<' ) ) {
+			$this->single_activate();
+		}
+	}
+
+	/**
+	 * Fired when a new site is activated with a WPMU environment.
+	 *
+	 * @since    2.0.0
+	 *
+	 * @param    int    $blog_id    ID of the new blog.
+	 */
+	public function activate_new_site( $blog_id ) {
+
+		if ( 1 !== did_action( 'wpmu_new_blog' ) ) {
+			return;
+		}
+
+		switch_to_blog( $blog_id );
+		$this->single_activate();
+		restore_current_blog();
+
+	}
+
+	/**
+	 * Creates a custom wp cron schedule interval (30min)
+	 *
+	 * @param array $schedules Intervals pre defined in WordPress
+	 *
+	 * @return array $schedules Intervals plus our custom value
+	 */
+	public function cron_add_twicehourly( $schedules ) {
+	 	// Adds twice hourly to the existing schedules.
+	 	$schedules['twicehourly'] = array(
+	 		'interval' => 1800,
+	 		'display'  => __( 'Twice Hourly' ),
+	 	);
+	 	return $schedules;
+	}
+
+	/**
+	 * Fetch all the rss urls
+	 *
+	 * @return void
+	 */
+	public function event_rss_urls(){
+
+		$option_instances = $this->get_settings();
+
+		foreach( $option_instances as $id => $instance ){
+			$processed = $this->get_feed( $instance );
+			if( ! empty( $processed ) ){
+
+				wp_cache_set( $this->id_base . '-' . $id,  $processed, $this->get_widget_slug() );
+			}
+
+		}
+		set_transient( 'rss_processed_time', date( 'Y-m-d H:i:s' ) );
+		// Force widget to show the new feed
+		$this->flush_widget_cache();
+	}
+
+	/**
+	 * Schedule a wp cron event to fetch all the rss urls every 30min
+	 *
+	 * @return void
+	 */
+	public function schedule_event_rss_urls(){
+		wp_schedule_event( time(), 'twicehourly', 'advanced_rss_widget_get_urls' );
+	}
+
+	/**
+	 * Unschedule the wp cron event to fetch all the rss urls every 30min
+	 *
+	 * @return void
+	 */
+	public function unschedule_event_rss_urls(){
+		$op  = 'advanced_rss_widget_dbv';
+		delete_option( $op );
+		wp_clear_scheduled_hook( 'advanced_rss_widget_get_urls' );
+	}
+
+	/**
+	 * Processing the url to fetch the RSS feed
+	 *
+	 * @param  string original $url
+	 * @return string processed $url
+	 */
+	public function process_url( $url ) {
+		$url = $url = ! empty( $url ) ? $url : '';
+		while ( stristr( $url, 'http' ) != $url ) {
+			$url = substr( $url, 1 );
+		}
+
+		return $url;
+	}
+
+	/**
+	 * Fetch feed url and save all the object in a unique object cache so we can display it at any time without refetching
+	 *
+	 * @param array $instance Widget settings array
+	 *
+	 * @return array $processed Array with necessary elements to display the fetched posts
+	 */
+	public function get_feed( $instance ){
+
+		$url = $this->process_url( $instance['url'] );
+		$cache_bust = $instance['cache_bust'];
+
+		$cache_bust = ( isset ( $cache_bust ) ? $cache_bust : false );
+
+		$current_date = date( "YmdGi" );
+
+		if ( $cache_bust ) {
+			$url = add_query_arg( 'cache_bust', $current_date, $url );
+		}
+
+		$url = apply_filters( 'advanced_rss_widget_url', $url, $this->id );
+
+		$processed = array();
+
+		if ( ! empty( $url ) ) {
+			$rss = fetch_feed( $url );
+			if ( ! is_wp_error( $rss ) && $rss->get_item_quantity() ) {
+				$processed = $this->process_rss_input( $rss, $instance );
+				$rss->__destruct();
+			}
+			unset( $rss );
+
+		}
+
+		return $processed;
+	}
 
 	/**
 	 * Return the widget slug.
@@ -100,6 +316,9 @@ class Advanced_RSS_Widget extends WP_Widget {
 	 */
 	public function widget( $args, $instance ) {
 
+		$rss_processed_time = get_transient( 'rss_processed_time' );
+		printf("<!-- rss_processed_time %s -->", $rss_processed_time);
+
 		// Check if there is a cached output
 		$cache = wp_cache_get( $this->get_widget_slug(), 'widget' );
 		if ( ! is_array( $cache ) ) {
@@ -115,47 +334,26 @@ class Advanced_RSS_Widget extends WP_Widget {
 		// Cache for 5 minutes
 		$expires = apply_filters( 'advanced_rss_widget_expiry_time', 300 );
 
-		$url = ! empty( $instance['url'] ) ? $instance['url'] : '';
-		while ( stristr( $url, 'http' ) != $url ) {
-			$url = substr( $url, 1 );
+		$processed = wp_cache_get( $this->id, $this->get_widget_slug() );
+
+		$source = 'cache';
+
+		if( false === $processed ){
+			$processed = $this->get_feed( $instance );
+			wp_cache_set( $this->id, $processed, $this->get_widget_slug() );
+			$source = 'inline';
 		}
 
-		$cache_bust = ( isset ( $instance['cache_bust'] ) ? $instance['cache_bust'] : false );
+		printf("<!-- generated from %s -->", $source);
 
-		$current_date = date( "YmdGi" );
-
-		if ( $cache_bust ) {
-			$url = add_query_arg( 'cache_bust', $current_date, $url );
-		}
-		$url = apply_filters( 'advanced_rss_widget_url', $url, $this->id );
-
-		if ( empty( $url ) ) {
-			return;
-		}
-
-		$widget_string = "<!-- generated $current_date -->";
-
-		$rss = fetch_feed( $url );
-
-		if ( is_wp_error( $rss ) ) {
+		if( empty( $processed ) ){
 			if ( is_admin() || current_user_can( 'manage_options' ) ) {
-				echo '<p>' . sprintf( '<strong>%s</strong>: %s', __( 'RSS Error', 'advanced-rss-widget' ), $rss->get_error_message() ) . '</p>';
+				echo '<p>' . __( 'An error has occurred, which probably means the feed is down or the url is wrong. Try again later.', 'advanced-rss-widget' ) . '</p>';
 			}
-
 			return;
 		}
 
-		if ( ! $rss->get_item_quantity() ) {
-			echo '<p>' . __( 'An error has occurred, which probably means the feed is down. Try again later.', 'advanced-rss-widget' ) . '</p>';
-			$rss->__destruct();
-			unset( $rss );
-
-			return;
-		}
-
-		$processed = $this->process_rss_input( $rss, $instance );
-
-		$link = esc_url( strip_tags( $rss->get_permalink() ) );
+		$link = $processed['link_rss'];
 		while ( stristr( $link, 'http' ) != $link ) {
 			$link = substr( $link, 1 );
 		}
@@ -200,9 +398,6 @@ class Advanced_RSS_Widget extends WP_Widget {
 
 		echo $widget_string;
 
-		$rss->__destruct();
-		unset( $rss );
-
 		return;
 
 	} // end widget
@@ -224,7 +419,8 @@ class Advanced_RSS_Widget extends WP_Widget {
 
 		$instance = $new_instance;
 
-		$this->flush_widget_cache();
+		$this->event_rss_urls();
+		$cached = array_key_exists( 'cache_bust', $instance );
 
 		return $instance;
 
@@ -254,8 +450,6 @@ class Advanced_RSS_Widget extends WP_Widget {
 	 */
 	private function process_rss_input( $rss, $instance ) {
 		$processed = array();
-
-
 		$items        = (int) $instance['items'];
 		$show_summary = (int) $instance['show_summary'];
 		$show_author  = (int) $instance['show_author'];
@@ -319,8 +513,10 @@ class Advanced_RSS_Widget extends WP_Widget {
 				}
 			}
 
+			$link_rss = esc_url( strip_tags( $rss->get_permalink() ) );
 
-			$processed[] = compact( "link", "title", "author", "date", "image", "summary", "desc" );
+			$time_processed = date( "Y-m-d H:i:s" );
+			$processed[] = compact( "link", "title", "author", "date", "image", "summary", "desc", "link_rss", "time_processed" );
 
 		}
 
@@ -407,6 +603,19 @@ class Advanced_RSS_Widget extends WP_Widget {
 	}
 
 } // end class
+
+
+function advanced_rss_widget_activate( $network_wide ) {
+	$object = new Advanced_RSS_Widget();
+	$object->activate( $network_wide );
+}
+register_activation_hook( __FILE__, 'advanced_rss_widget_activate' );
+
+function advanced_rss_widget_deactivate( $network_wide ) {
+	$object = new Advanced_RSS_Widget();
+	$object->deactivate( $network_wide );
+}
+register_deactivation_hook( __FILE__, 'advanced_rss_widget_deactivate' );
 
 add_action( 'widgets_init', function () {
 	register_widget( "Advanced_RSS_Widget" );
