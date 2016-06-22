@@ -57,7 +57,7 @@ class Advanced_RSS_Widget extends WP_Widget {
 	 *
 	 * @var      string
 	 */
-	protected $version = '2.0.0';
+	protected $version = '2.0.1';
 
 	/**
 	 * Specifies the classname and description, instantiates the widget,
@@ -159,7 +159,7 @@ class Advanced_RSS_Widget extends WP_Widget {
 	public function maybe_upgrade() {
 		$op  = 'advanced_rss_widget_dbv';
 		$ver = get_option( $op, '1.0.0' );
-		if ( version_compare( $ver, '2.0.0', '<' ) ) {
+		if ( version_compare( $ver, '2.0.1', '<' ) ) {
 			$this->single_activate();
 		}
 	}
