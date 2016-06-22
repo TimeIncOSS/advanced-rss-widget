@@ -266,9 +266,8 @@ class Advanced_RSS_Widget extends WP_Widget {
 	public function get_feed( $instance ){
 
 		$url = $this->process_url( $instance['url'] );
-		$cache_bust = $instance['cache_bust'];
 
-		$cache_bust = ( isset ( $cache_bust ) ? $cache_bust : false );
+		$cache_bust = isset ( $instance['cache_bust'] ) ? (bool) $instance['cache_bust'] : false;
 
 		$current_date = date( "YmdGi" );
 
