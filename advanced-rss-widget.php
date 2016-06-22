@@ -449,13 +449,13 @@ class Advanced_RSS_Widget extends WP_Widget {
 	 * @return array
 	 */
 	private function process_rss_input( $rss, $instance ) {
-		$processed = array();
-		$items        = (int) $instance['items'];
-		$show_summary = (int) $instance['show_summary'];
-		$show_author  = (int) $instance['show_author'];
-		$show_date    = (int) $instance['show_date'];
-		$show_image   = (int) $instance['show_image'];
-		$teaser_size  = (int) $instance['teaser_size'];
+		$processed    = array();
+		$items        = isset( $instance[ 'items' ] ) ? (int) $instance[ 'items' ] : 0;
+		$show_summary = isset( $instance[ 'show_summary' ] ) ? (int) $instance[ 'show_summary' ] : 0;
+		$show_author  = isset( $instance[ 'show_author' ] ) ? (int) $instance[ 'show_author' ] : 0;
+		$show_date    = isset( $instance[ 'show_date' ] ) ? (int) $instance[ 'show_date' ] : 0;
+		$show_image   = isset( $instance[ 'show_image' ] ) ? (int) $instance[ 'show_image' ] : 0;
+		$teaser_size  = isset( $instance[ 'teaser_size' ] ) ? (int) $instance[ 'teaser_size' ] : 0;
 
 		foreach ( $rss->get_items( 0, $items ) as $item ) {
 			$link = $item->get_link();
