@@ -1,7 +1,7 @@
 {
-    "name"       : "timeincuk/advanced-rss-widget",
+    "name"       : "timeincoss/advanced-rss-widget",
     "description": "More advanced RSS widget, with more options and customization ",
-    "homepage"   : "https://github.com/TimeIncUK/advanced-rss-widget",
+    "homepage"   : "https://github.com/timeincoss/advanced-rss-widget",
     "type"       : "wordpress-plugin",
     "license"    : "GPL-2.0+",
     "authors"    : [
