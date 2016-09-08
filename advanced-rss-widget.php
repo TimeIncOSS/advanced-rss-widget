@@ -112,10 +112,12 @@ class Advanced_RSS_Widget extends WP_Widget {
 
 		if ( $network_wide && function_exists( 'is_multisite' ) && is_multisite() ) {
 			// Get all blog ids of the current network
-			$sites = wp_get_sites();
+			$sites = get_sites( [
+				'fields' => 'ids',
+			] );
 
-			foreach ( $sites as $id => $site ) {
-				switch_to_blog( $site['blog_id'] );
+			foreach ( $sites as $site ) {
+				switch_to_blog( $site );
 				$this->single_activate();
 			}
 			restore_current_blog();
@@ -143,10 +145,12 @@ class Advanced_RSS_Widget extends WP_Widget {
 
 		if ( $network_wide && function_exists( 'is_multisite' ) && is_multisite() ) {
 			// Get all blog ids of the current network
-			$sites = wp_get_sites();
+			$sites = get_sites( [
+				'fields' => 'ids',
+			] );
 
-			foreach ( $sites as $id => $site ) {
-				switch_to_blog( $site['blog_id'] );
+			foreach ( $sites as $site ) {
+				switch_to_blog( $site );
 				$this->single_deactivate();
 			}
 			restore_current_blog();
