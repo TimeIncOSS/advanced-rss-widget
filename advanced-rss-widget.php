@@ -546,8 +546,8 @@ class Advanced_RSS_Widget extends WP_Widget {
 				$templates[ basename( $file ) ] = _cleanup_header_comment( $header[1] );
 
 			}
+			closedir( $dh ); 
 		}
-		closedir( $dh );
 
 		return $templates;
 	}
