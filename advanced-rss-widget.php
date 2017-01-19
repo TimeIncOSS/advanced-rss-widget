@@ -510,7 +510,7 @@ class Advanced_RSS_Widget extends WP_Widget {
 			$image = '';
 			if ( $show_image ) {
 				if ( $enclosure = $item->get_enclosure() ) {
-					if ( $enclosure->get_medium() == 'image' ) {
+					if ( $enclosure->get_medium() == 'image' || $enclosure->get_type() == 'image/jpeg' || $enclosure->get_type() == 'image/png') {
 						$image = sprintf( '<img src="%s" alt="%s" height="%s" width="%s"/>', $enclosure->get_link(), $enclosure->get_description(), $enclosure->get_height(), $enclosure->get_width() );
 					}
 				}
